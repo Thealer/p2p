@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="cn.wolfcode.p2p.base.mapper.AccountMapper" >
+  <resultMap id="BaseResultMap" type="cn.wolfcode.p2p.base.domain.Account" >
+    <id column="id" property="id" />
+    <result column="version" property="version" />
+    <result column="tradePassword" property="trade_password" />
+    <result column="usableAmount" property="usable_amount" />
+    <result column="freezedAmount" property="freezed_amount" />
+    <result column="unReceiveInterest" property="unreceive_interest" />
+    <result column="unReceivePrincipal" property="unreceive_principal" />
+    <result column="unReturnAmount" property="unreturn_amount" />
+    <result column="remainBorrowLimit" property="remain_borrow_limit" />
+    <result column="borrowLimit" property="borrow_limit" />
+  </resultMap>
+  <insert id="insert" parameterType="cn.wolfcode.p2p.base.domain.Account" useGeneratedKeys="true" keyProperty="id" >
+    insert into account (id,version, tradePassword, usableAmount, freezedAmount,
+      unReceiveInterest, unReceivePrincipal, unReturnAmount, remainBorrowLimit,borrowLimit
+      )
+      values (#{id},#{version}, #{trade_password}, #{usable_amount}, #{freezed_amount}, #{unreceive_interest},
+    #{unreceive_principal}, #{unreturn_amount}, #{remain_borrow_limit}, #{borrow_limit})
+  </insert>
+  <update id="updateByPrimaryKey" parameterType="cn.wolfcode.p2p.base.domain.Account" >
+    update account
+    set tradePassword = #{trade_password},
+      usableAmount = #{usable_amount},
+      freezedAmount = #{freezed_amount},
+      unReceiveInterest = #{unreceive_interest},
+      unReceivePrincipal = #{unreceive_principal},
+      unReturnAmount = #{unreturn_amount},
+      remainBorrowLimit = #{remain_borrow_limit},
+      borrowLimit = #{borrow_limit},
+      version = version + 1
+    where id = #{id} and version = #{version}
+  </update>
+  <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Long" >
+    select id,version, tradePassword, usableAmount, freezedAmount,
+      unReceiveInterest, unReceivePrincipal, unReturnAmount, remainBorrowLimit,borrowLimit
+    from account
+    where id = #{id}
+  </select>
+</mapper>

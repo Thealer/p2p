@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="cn.wolfcode.p2p.base.mapper.IpLogMapper">
+    <resultMap id="BaseResultMap" type="cn.wolfcode.p2p.base.domain.IpLog">
+        <id column="id" property="id"/>
+        <result column="username" property="username"/>
+        <result column="loginTime" property="loginTime"/>
+        <result column="ip" property="ip"/>
+        <result column="state" property="state"/>
+        <result column="userType" property="userType"/>
+    </resultMap>
+    <insert id="insert" parameterType="cn.wolfcode.p2p.base.domain.IpLog" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO iplog (username, loginTime, ip, state, userType)
+        VALUES (#{username}, #{loginTime}, #{ip}, #{state}, #{userType})
+    </insert>
+
+
+    <select id="selectAll" resultMap="BaseResultMap">
+        SELECT
+            id,
+            ip,
+            state,
+            username,
+            loginTime
+        FROM iplog
+    </select>
+    <sql id="base_sql">
+        <where>
+            <if test="beginDate != null">
+                AND loginTime >= #{beginDate}
+            </if>
+            <if test="endDate != null">
+                AND loginTime &lt;= #{endDate}
+            </if>
+            <if test="state != -1">
+                AND state = #{state}
+            </if>
+            <if test="username != null">
+                AND username =#{username}
+            </if>
+            <if test="userType != -1">
+                AND userType =#{userType}
+            </if>
+        </where>
+    </sql>
+
+
+    <select id="queryForCount" resultType="java.lang.Integer">
+        select count(0) from iplog
+        <include refid="base_sql"/>
+    </select>
+    <select id="queryForList" resultMap="BaseResultMap">
+        select id,username,loginTime, ip, state, userType
+        from iplog
+        <include refid="base_sql"/>
+        limit #{start},#{pageSize}
+    </select>
+</mapper>

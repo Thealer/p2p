@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="cn.wolfcode.p2p.business.mapper.SystemAccountFlowMapper" >
+  <resultMap id="BaseResultMap" type="cn.wolfcode.p2p.business.domain.SystemAccountFlow" >
+    <id column="id" property="id" />
+    <result column="createdDate" property="createdDate" />
+    <result column="actionType" property="actionType" />
+    <result column="amount" property="amount" />
+    <result column="note" property="note" />
+    <result column="usableAmount" property="usableAmount" />
+    <result column="freezedAmount" property="freezedAmount" />
+  </resultMap>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Long" >
+    delete from systemaccountflow
+    where id = #{id}
+  </delete>
+  <insert id="insert" parameterType="cn.wolfcode.p2p.business.domain.SystemAccountFlow" useGeneratedKeys="true" keyProperty="id" >
+    insert into systemaccountflow (createdDate, actionType, amount, note, usableAmount, freezedAmount
+      )
+    values (#{createdDate}, #{actionType}, #{amount}, #{note}, #{usableAmount}, #{freezedAmount}
+      )
+  </insert>
+  <update id="updateByPrimaryKey" parameterType="cn.wolfcode.p2p.business.domain.SystemAccountFlow" >
+    update systemaccountflow
+    set createdDate = #{createdDate},
+      actionType = #{actionType},
+      amount = #{amount},
+      note = #{note},
+      usableAmount = #{usableAmount},
+      freezedAmount = #{freezedAmount}
+    where id = #{id}
+  </update>
+  <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Long" >
+    select id, createdDate, actionType, amount, note, usableAmount, freezedAmount
+    from systemaccountflow
+    where id = #{id}
+  </select>
+  <select id="selectAll" resultMap="BaseResultMap" >
+    select id, createdDate, actionType, amount, note, usableAmount, freezedAmount
+    from systemaccountflow
+  </select>
+</mapper>

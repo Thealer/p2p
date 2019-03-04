@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="cn.wolfcode.p2p.business.mapper.RechargeOfflineMapper" >
+  <resultMap id="BaseResultMap" type="cn.wolfcode.p2p.business.domain.RechargeOffline" >
+    <id column="id" property="id" />
+    <result column="state" property="state" />
+    <result column="remark" property="remark" />
+    <result column="auditTime" property="auditTime" />
+    <result column="applyTime" property="applyTime" />
+    <result column="tradeCode" property="tradeCode" />
+    <result column="tradeTime" property="tradeTime" />
+    <result column="amount" property="amount" />
+    <result column="note" property="note" />
+
+    <!--<result column="auditorId" property="auditorId" />
+    <result column="applierId" property="applierId" />
+    <result column="bankInfoId" property="bankInfoId" />-->
+
+    <association property="applier" columnPrefix="ap_"
+                 resultMap="cn.wolfcode.p2p.base.mapper.LoginInfoMapper.BaseResultMap"/>
+
+    <association property="auditor" columnPrefix="au_"
+                 resultMap="cn.wolfcode.p2p.base.mapper.LoginInfoMapper.BaseResultMap"/>
+    <association property="bankInfo" columnPrefix="pb_"
+                 resultMap="cn.wolfcode.p2p.business.mapper.PlatformBankInfoMapper.BaseResultMap"/>
+  </resultMap>
+  <insert id="insert" parameterType="cn.wolfcode.p2p.business.domain.RechargeOffline" useGeneratedKeys="true" keyProperty="id" >
+    insert into rechargeoffline (state, remark, auditTime, applyTime, auditorId, applierId, 
+      tradeCode, tradeTime, amount, note, bankInfoId)
+    values (#{state}, #{remark}, #{auditTime}, #{applyTime}, #{auditor.id}, #{applier.id},
+      #{tradeCode}, #{tradeTime}, #{amount}, #{note}, #{bankInfo.id})
+  </insert>
+  <update id="updateByPrimaryKey" parameterType="cn.wolfcode.p2p.business.domain.RechargeOffline" >
+    update rechargeoffline
+    set state = #{state},
+      remark = #{remark},
+      auditTime = #{auditTime},
+      applyTime = #{applyTime},
+      auditorId = #{auditor.id},
+      applierId = #{applier.id},
+      tradeCode = #{tradeCode},
+      tradeTime = #{tradeTime},
+      amount = #{amount},
+      note = #{note},
+      bankInfoId = #{bankInfo.id}
+    where id = #{id}
+  </update>
+  <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Long" >
+    select re.id, re.state, remark, auditTime, applyTime, auditorId, applierId, tradeCode,
+    tradeTime, amount, note, bankInfoId,
+      au.id au_id,
+      au.username au_username,
+      ap.id ap_id,
+      ap.username ap_username,
+      pb.id pb_id,
+      pb.accountName pb_accountName,
+      pb.accountNumber pb_accountNumber,
+      pb.bankForkName pb_bankForkName,
+      pb.bankName pb_bankName
+    from rechargeoffline re
+      left join logininfo au on au.id = re.auditorId
+      join logininfo ap on ap.id = re.applierId
+      join platformbankinfo pb on pb.id = re.bankInfoId
+    where re.id = #{id}
+  </select>
+  <sql id="base_sql">
+    <where>
+      <if test="state != -1">
+        AND re.state = #{state}
+      </if>
+      <if test="bankInfoId != -1">
+        AND re.bankInfoId = #{bankInfoId}
+      </if>
+      <if test="beginDate != null">
+        AND re.tradeTime >= #{beginDate}
+      </if>
+      <if test="endDate != null">
+        AND re.tradeTime &lt;= #{endDate}
+      </if>
+      <if test="tradeCode != null">
+        AND re.tradeCode = #{tradeCode}
+      </if>
+    </where>
+  </sql>
+
+  <select id="selectForCount" resultType="java.lang.Integer">
+    select count(0) from rechargeoffline re
+    <include refid="base_sql"/>
+  </select>
+  <select id="selectForList" resultMap="BaseResultMap">
+    select re.id, re.state, remark, auditTime, applyTime, auditorId, applierId, tradeCode,
+      tradeTime, amount, note, bankInfoId,
+      au.id au_id,
+      au.username au_username,
+      ap.id ap_id,
+      ap.username ap_username,
+      pb.id pb_id,
+      pb.accountName pb_accountName,
+      pb.accountNumber pb_accountNumber,
+      pb.bankForkName pb_bankForkName,
+      pb.bankName pb_bankName
+    from rechargeoffline re
+      left join logininfo au on au.id = re.auditorId
+      join logininfo ap on ap.id = re.applierId
+      join platformbankinfo pb on pb.id = re.bankInfoId
+    <include refid="base_sql"/>
+    limit #{start},#{pageSize}
+  </select>
+</mapper>

@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="cn.wolfcode.p2p.business.mapper.CreditTransferMapper" >
+  <resultMap id="BaseResultMap" type="cn.wolfcode.p2p.business.domain.CreditTransfer" >
+    <id column="id" property="id" />
+    <result column="version" property="version" />
+    <result column="bidId" property="bidId" />
+    <result column="bidRequestId" property="bidRequestId" />
+    <result column="bidRequestAmount" property="bidRequestAmount" />
+    <result column="currentRate" property="currentRate" />
+    <result column="returnType" property="returnType" />
+    <result column="monthIndex" property="monthIndex" />
+    <result column="remainMonthIndex" property="remainMonthIndex" />
+    <result column="remainInterest" property="remainInterest" />
+    <result column="closestDeadLine" property="closestDeadLine" />
+    <result column="bidRequestTitle" property="bidRequestTitle" />
+    <result column="bidRequestState" property="bidRequestState" />
+    <result column="publishDate" property="publishDate" />
+    <result column="transDate" property="transDate" />
+
+
+    <!--<result column="transFromId" property="transFromId" />
+    <result column="transToId" property="transToId" />-->
+    <association property="transFrom" columnPrefix="tf_"
+                 resultMap="cn.wolfcode.p2p.base.mapper.LoginInfoMapper.BaseResultMap"/>
+    <association property="transTo" columnPrefix="tt_"
+                 resultMap="cn.wolfcode.p2p.base.mapper.LoginInfoMapper.BaseResultMap"/>
+
+  </resultMap>
+  <insert id="insert" parameterType="cn.wolfcode.p2p.business.domain.CreditTransfer" useGeneratedKeys="true" keyProperty="id" >
+    insert into credittransfer (version, bidId, bidRequestId, bidRequestAmount, currentRate, 
+      returnType, monthIndex, remainMonthIndex, remainInterest, closestDeadLine, 
+      bidRequestTitle, bidRequestState, transFromId, transToId, publishDate, 
+      transDate)
+    values (#{version}, #{bidId}, #{bidRequestId}, #{bidRequestAmount}, #{currentRate}, 
+      #{returnType}, #{monthIndex}, #{remainMonthIndex}, #{remainInterest}, #{closestDeadLine}, 
+      #{bidRequestTitle}, #{bidRequestState}, #{transFrom.id}, #{transTo.id}, #{publishDate},
+      #{transDate})
+  </insert>
+  <update id="updateByPrimaryKey" parameterType="cn.wolfcode.p2p.business.domain.CreditTransfer" >
+    update credittransfer
+    set version = version + 1,
+      bidId = #{bidId},
+      bidRequestId = #{bidRequestId},
+      bidRequestAmount = #{bidRequestAmount},
+      currentRate = #{currentRate},
+      returnType = #{returnType},
+      monthIndex = #{monthIndex},
+      remainMonthIndex = #{remainMonthIndex},
+      remainInterest = #{remainInterest},
+      closestDeadLine = #{closestDeadLine},
+      bidRequestTitle = #{bidRequestTitle},
+      bidRequestState = #{bidRequestState},
+      transFromId = #{transFrom.id},
+      transToId = #{transTo.id},
+      publishDate = #{publishDate},
+      transDate = #{transDate}
+    where id = #{id} and version = #{version}
+  </update>
+  <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Long" >
+    select cr.id, version, bidId, bidRequestId, bidRequestAmount, currentRate, returnType,
+    monthIndex, remainMonthIndex, remainInterest, closestDeadLine, bidRequestTitle, bidRequestState, 
+    transFromId, transToId, publishDate, transDate,
+      tf.id tf_id,
+      tf.username tf_username,
+      tt.id tt_id,
+      tt.username tt_username
+    from credittransfer cr
+      left join logininfo tf on tf.id = cr.transFromId
+      left join logininfo tt on tt.id = cr.transToId
+    where cr.id = #{id}
+  </select>
+  <select id="selectCanCreditTransForCount" resultType="java.lang.Integer">
+    select count(0)
+    from (
+      select
+      psd.id
+      from paymentscheduledetail psd
+      where psd.toLoginInfoId = #{currentUserId} and psd.payDate is null and psd.transfer = 0
+      group by psd.bidId,psd.bidRequestId
+    ) t
+  </select>
+  <select id="selectCanCreditTransForList" resultMap="BaseResultMap">
+    SELECT t.*,br.title bidRequestTitle,br.currentRate
+      from (
+        select
+          psd.bidId,
+          psd.bidRequestId,
+          count(0) remainMonthIndex,
+          sum(psd.principal) bidRequestAmount,
+          min(psd.deadline) closestDeadLine,
+          sum(psd.interest) remainInterest
+          from paymentscheduledetail psd
+        where psd.toLoginInfoId = #{currentUserId} and psd.payDate is null and psd.transfer = 0
+        group by psd.bidId,psd.bidRequestId
+      ) t join bidrequest br on br.id = t.bidRequestId
+    limit #{start},#{pageSize}
+  </select>
+  <select id="selectReadyCreditTransferForList" resultMap="BaseResultMap">
+    SELECT t.*,br.title bidRequestTitle,br.currentRate
+    from (
+           select
+             psd.bidId,
+             psd.bidRequestId,
+             count(0) remainMonthIndex,
+             sum(psd.principal) bidRequestAmount,
+             min(psd.deadline) closestDeadLine,
+             sum(psd.interest) remainInterest
+           from paymentscheduledetail psd
+           where psd.toLoginInfoId = #{currentUserId} and psd.payDate is null and psd.transfer = 0
+             and psd.bidId in <foreach collection="bidIds" open="(" close=")" separator="," item="bidId">
+                                  #{bidId}
+                              </foreach>
+           group by psd.bidId,psd.bidRequestId
+         ) t join bidrequest br on br.id = t.bidRequestId
+  </select>
+
+  <sql id="base_sql">
+    <where>
+      <if test="bidRequestState != -1">
+        AND cr.bidRequestState = #{bidRequestState}
+      </if>
+    </where>
+  </sql>
+
+  <select id="selectForCount" resultType="java.lang.Integer">
+    select count(0) from credittransfer cr
+    <include refid="base_sql"/>
+  </select>
+
+  <select id="selectForList" resultMap="BaseResultMap">
+    select cr.id, version, bidId, bidRequestId, bidRequestAmount, currentRate, returnType,
+      monthIndex, remainMonthIndex, remainInterest, closestDeadLine, bidRequestTitle, bidRequestState,
+      transFromId, transToId, publishDate, transDate,
+      tf.id tf_id,
+      tf.username tf_username,
+      tt.id tt_id,
+      tt.username tt_username
+    from credittransfer cr
+      left join logininfo tf on tf.id = cr.transFromId
+      left join logininfo tt on tt.id = cr.transToId
+    <include refid="base_sql"/>
+    limit #{start},#{pageSize}
+  </select>
+</mapper>

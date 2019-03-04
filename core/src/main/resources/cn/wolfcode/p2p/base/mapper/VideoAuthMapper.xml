@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="cn.wolfcode.p2p.base.mapper.VideoAuthMapper" >
+  <resultMap id="BaseResultMap" type="cn.wolfcode.p2p.base.domain.VideoAuth" >
+    <id column="id" property="id" />
+    <result column="state" property="state" />
+    <result column="remark" property="remark" />
+    <result column="auditTime" property="auditTime" />
+    <result column="applyTime" property="applyTime" />
+    <result column="orderDate" property="orderDate" />
+    <!--<result column="auditorId" property="auditorId" />
+    <result column="applierId" property="applierId" />
+    <result column="orderTimeId" property="orderTimeId" />-->
+
+    <association property="applier" columnPrefix="ap_" resultMap="cn.wolfcode.p2p.base.mapper.LoginInfoMapper.BaseResultMap"/>
+
+    <association property="auditor" columnPrefix="au_" resultMap="cn.wolfcode.p2p.base.mapper.LoginInfoMapper.BaseResultMap"/>
+
+    <association property="orderTime" columnPrefix="ot_" resultMap="cn.wolfcode.p2p.base.mapper.OrderTimeMapper.BaseResultMap"/>
+
+  </resultMap>
+  <insert id="insert" parameterType="cn.wolfcode.p2p.base.domain.VideoAuth" useGeneratedKeys="true" keyProperty="id" >
+    insert into videoauth (state, remark, auditTime, applyTime, auditorId, applierId, 
+      orderDate, orderTimeId)
+    values (#{state}, #{remark}, #{auditTime}, #{applyTime}, #{auditor.id}, #{applier.id},
+      #{orderDate}, #{orderTime.id})
+  </insert>
+  <update id="updateByPrimaryKey" parameterType="cn.wolfcode.p2p.base.domain.VideoAuth" >
+    update videoauth
+    set state = #{state},
+      remark = #{remark},
+      auditTime = #{auditTime},
+      applyTime = #{applyTime},
+      auditorId = #{auditor.id},
+      applierId = #{applier.id},
+      orderDate = #{orderDate},
+      orderTimeId = #{orderTime.id}
+    where id = #{id}
+  </update>
+  <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Long" >
+    select va.id, va.state, va.remark, va.auditTime, va.applyTime, va.auditorId, va.applierId, va.orderDate,
+      va.orderTimeId,
+      au.id au_id,
+      au.username au_username,
+      ap.id ap_id,
+      ap.username ap_username,
+      ot.id ot_id,
+      ot.begin ot_begin,
+      ot.end ot_end
+    from videoauth va
+    left join logininfo au on au.id = va.auditorId
+    join logininfo ap on ap.id = va.applierId
+    join ordertime ot on ot.id = va.orderTimeId
+    where va.id = #{id}
+  </select>
+
+  <sql id="base_sql">
+    <where>
+      <if test="state != -1">
+        AND va.state = #{state}
+      </if>
+      <if test="beginDate != null">
+        AND va.orderDate >= #{beginDate}
+      </if>
+      <if test="endDate != null">
+        AND va.orderDate &lt;= #{endDate}
+      </if>
+      <if test="username != null">
+        AND ap.username = #{username}
+      </if>
+      <if test="auditorId != null">
+        AND va.auditorId =#{auditorId}
+      </if>
+    </where>
+
+  </sql>
+
+  <select id="selectForCount" resultType="java.lang.Integer">
+    select count(0) FROM videoauth va
+    join logininfo ap on ap.id = va.applierId
+    <include refid="base_sql"/>
+  </select>
+
+
+  <select id="selectForList" resultMap="BaseResultMap">
+    select va.id, va.state, va.remark, va.auditTime, va.applyTime, va.auditorId, va.applierId, va.orderDate,
+      va.orderTimeId,
+      au.id au_id,
+      au.username au_username,
+      ap.id ap_id,
+      ap.username ap_username,
+      ot.id ot_id,
+      ot.begin ot_begin,
+      ot.end ot_end
+    from videoauth va
+      left join logininfo au on au.id = va.auditorId
+      join logininfo ap on ap.id = va.applierId
+      join ordertime ot on ot.id = va.orderTimeId
+    <include refid="base_sql"/>
+    limit #{start},#{pageSize}
+  </select>
+</mapper>

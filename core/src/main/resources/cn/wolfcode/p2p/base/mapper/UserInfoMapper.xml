@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="cn.wolfcode.p2p.base.mapper.UserInfoMapper">
+    <resultMap id="BaseResultMap" type="cn.wolfcode.p2p.base.domain.UserInfo">
+        <id column="id" property="id"/>
+        <result column="version" property="version"/>
+        <result column="bitState" property="bit_state"/>
+        <result column="realName" property="real_name"/>
+        <result column="idNumber" property="id_number"/>
+        <result column="phoneNumber" property="phone_number"/>
+        <result column="email" property="email"/>
+        <result column="realAuthId" property="realAuthId"/>
+        <result column="videoAuthId" property="videoAuthId"/>
+        <!--<result column="income_grade" property="incomeGrade.id" />
+        <result column="marriage" property="marriage.id" />
+        <result column="kid_count" property="kidCount.id" />
+        <result column="education_background" property="educationBackground.id" />
+        <result column="house_condition" property="houseCondition.id" />-->
+
+        <association property="incomeGrade" column="incomeGradeId"
+                     select="cn.wolfcode.p2p.base.mapper.SystemDictionaryItemMapper.selectByPrimaryKey"/>
+
+        <association property="marriage" column="marriageId"
+                     select="cn.wolfcode.p2p.base.mapper.SystemDictionaryItemMapper.selectByPrimaryKey"/>
+
+        <association property="kidCount" column="kidCountId"
+                     select="cn.wolfcode.p2p.base.mapper.SystemDictionaryItemMapper.selectByPrimaryKey"/>
+
+        <association property="educationBackground" column="educationBackgroundId"
+                     select="cn.wolfcode.p2p.base.mapper.SystemDictionaryItemMapper.selectByPrimaryKey"/>
+
+        <association property="houseCondition" column="houseConditionId"
+                     select="cn.wolfcode.p2p.base.mapper.SystemDictionaryItemMapper.selectByPrimaryKey"/>
+
+    </resultMap>
+    <insert id="insert" parameterType="cn.wolfcode.p2p.base.domain.UserInfo" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO userinfo (id, version, bitState, realName, idNumber, phoneNumber, email, incomeGradeId,
+                              marriageId, kidCountId, educationBackgroundId, houseConditionId, realauthId, videoAuthId)
+        VALUES
+            (#{id}, #{version}, #{bit_state}, #{real_name}, #{id_number}, #{phone_number}, #{email}, #{incomeGrade.id},
+                    #{marriage.id}, #{kidCount.id}, #{educationBackground.id}, #{houseCondition.id}, #{realAuthId},
+             #{videoAuthId})
+    </insert>
+    <update id="updateByPrimaryKey" parameterType="cn.wolfcode.p2p.base.domain.UserInfo">
+        UPDATE userinfo
+        SET version               = version + 1,
+            bitState              = #{bit_state},
+            realName              = #{real_name},
+            idNumber              = #{id_number},
+            phoneNumber           = #{phone_number},
+            incomeGradeId         = #{incomeGrade.id},
+            marriageId            = #{marriage.id},
+            kidCountId            = #{kidCount.id},
+            educationBackgroundId = #{educationBackground.id},
+            houseConditionId      = #{houseCondition.id},
+            email                 = #{email},
+            realAuthId           = #{realAuthId},
+            videoAuthId           = #{videoAuthId}
+        WHERE id = #{id} AND version = #{version}
+    </update>
+    <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Long">
+        SELECT
+            id,
+            version,
+            bitState,
+            realName,
+            idNumber,
+            phoneNumber,
+            incomeGradeId,
+            marriageId,
+            kidCountId,
+            educationBackgroundId,
+            houseConditionId,
+            realAuthId,
+            videoAuthId
+        FROM userinfo
+        WHERE id = #{id}
+    </select>
+</mapper>

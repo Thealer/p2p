@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="cn.wolfcode.p2p.business.mapper.PaymentScheduleMapper" >
+  <resultMap id="BaseResultMap" type="cn.wolfcode.p2p.business.domain.PaymentSchedule" >
+    <id column="id" property="id" />
+    <result column="deadLine" property="deadLine" />
+    <result column="payDate" property="payDate" />
+    <result column="totalAmount" property="totalAmount" />
+    <result column="principal" property="principal" />
+    <result column="interest" property="interest" />
+    <result column="monthIndex" property="monthIndex" />
+    <result column="state" property="state" />
+    <result column="bidRequestType" property="bidRequestType" />
+    <result column="returnType" property="returnType" />
+    <result column="bidRequestId" property="bidRequestId" />
+    <result column="bidRequestTitle" property="bidRequestTitle" />
+
+    <!--<result column="borrowUserId" property="bidUserId" />-->
+    <association property="borrowUser" columnPrefix="ap_" resultMap="cn.wolfcode.p2p.base.mapper.LoginInfoMapper.BaseResultMap"/>
+
+    <collection property="paymentScheduleDetails" column="id"
+                select="cn.wolfcode.p2p.business.mapper.PaymentScheduleDetailMapper.selectByPsId"/>
+  </resultMap>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Long" >
+    delete from paymentschedule
+    where id = #{id}
+  </delete>
+  <insert id="insert" parameterType="cn.wolfcode.p2p.business.domain.PaymentSchedule" useGeneratedKeys="true" keyProperty="id" >
+    insert into paymentschedule (deadLine, payDate, totalAmount, principal, interest, monthIndex, 
+      state, bidRequestType, returnType, bidRequestId, borrowUserId, bidRequestTitle,money
+      )
+    values (#{deadLine}, #{payDate}, #{totalAmount}, #{principal}, #{interest}, #{monthIndex}, 
+      #{state}, #{bidRequestType}, #{returnType}, #{bidRequestId}, #{borrowUser.id}, #{bidRequestTitle},#{money}
+      )
+  </insert>
+  <update id="updateByPrimaryKey" parameterType="cn.wolfcode.p2p.business.domain.PaymentSchedule" >
+    update paymentschedule
+    set deadLine = #{deadLine},
+      payDate = #{payDate},
+      totalAmount = #{totalAmount},
+      principal = #{principal},
+      interest = #{interest},
+      monthIndex = #{monthIndex},
+      state = #{state},
+      bidRequestType = #{bidRequestType},
+      returnType = #{returnType},
+      bidRequestId = #{bidRequestId},
+      borrowUserId = #{borrowUser.id},
+      bidRequestTitle = #{bidRequestTitle},
+      money = #{money}
+    where id = #{id}
+  </update>
+  <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Long" >
+    select ps.id, deadLine, payDate, totalAmount, principal, interest, monthIndex, ps.state,money,
+    bidRequestType, returnType, bidRequestId, borrowUserId, bidRequestTitle,
+      ap.id ap_id,
+      ap.username ap_username
+    from paymentschedule ps join logininfo ap on ap.id = ps.borrowUserId
+    where ps.id = #{id}
+  </select>
+  <select id="selectAll" resultMap="BaseResultMap" >
+    select id, deadLine, payDate, totalAmount, principal, interest, monthIndex, state, 
+    bidRequestType, returnType, bidRequestId, borrowUserId, bidRequestTitle,money
+    from paymentschedule
+  </select>
+
+  <sql id="base_sql">
+    <where>
+      <if test="state != -1">
+        AND ps.state = #{state}
+      </if>
+      <if test="beginDate != null">
+        AND ps.deadLine >= #{beginDate}
+      </if>
+      <if test="endDate != null">
+        AND ps.deadLine &lt;= #{endDate}
+      </if>
+      <if test="borrowUserId != null">
+        AND ps.borrowUserId = #{borrowUserId}
+      </if>
+    </where>
+  </sql>
+  <select id="selectForCount" resultType="java.lang.Integer">
+    select count(0) from paymentschedule ps
+    <include refid="base_sql"/>
+  </select>
+
+  <select id="selectForList" resultMap="BaseResultMap">
+    select ps.id, deadLine, payDate, totalAmount, principal, interest, monthIndex, ps.state,
+      bidRequestType, returnType, bidRequestId, ps.borrowUserId, bidRequestTitle,money,
+      ap.id ap_id,
+      ap.username ap_username
+    from paymentschedule ps join logininfo ap on ap.id = ps.borrowUserId
+    <include refid="base_sql"/>
+    limit #{start},#{pageSize}
+  </select>
+  <select id="countByStateAndBidRequestId" resultType="java.lang.Integer">
+    select count(0) from paymentschedule ps
+    where ps.state = #{state} and ps.bidRequestId = #{bidRequestId}
+  </select>
+    <select id="bidRequestCheck" resultMap="BaseResultMap">
+      select ps.id, deadLine, payDate, totalAmount, principal, interest, monthIndex, ps.state,
+        bidRequestType, returnType, bidRequestId, ps.borrowUserId, bidRequestTitle,money,
+        ap.id ap_id,
+        ap.username ap_username
+      from paymentschedule ps join logininfo ap on ap.id = ps.borrowUserId
+      where ps.state = ${state} and ps.deadLine &lt; #{date}
+    </select>
+</mapper>

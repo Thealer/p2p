@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="cn.wolfcode.p2p.base.mapper.BidRequestMapper" >
+  <resultMap id="BaseResultMap" type="cn.wolfcode.p2p.base.domain.BidRequest" >
+    <id column="id" property="id" />
+    <result column="version" property="version" />
+    <result column="returnType" property="returnType"/>
+    <result column="bidRequestType" property="bidRequestType" />
+    <result column="bidRequestState" property="bidRequestState" />
+    <result column="bidRequestAmount" property="bidRequestAmount" />
+    <result column="currentRate" property="currentRate" />
+    <result column="monthes2Return" property="monthes2Return" />
+    <result column="bidCount" property="bidCount" />
+    <result column="totalRewardAmount" property="totalRewardAmount" />
+    <result column="currentSum" property="currentSum" />
+    <result column="title" property="title" />
+    <result column="description" property="description" />
+    <result column="note" property="note" />
+    <result column="disableDate" property="disableDate" />
+    <result column="disableDays" property="disableDays" />
+    <result column="minBidAmount" property="minBidAmount" />
+    <result column="applyTime" property="applyTime" />
+    <result column="publishTime" property="publishTime" />
+
+    <!--<result column="createUserId" property="createUserId" />-->
+    <association property="createUser" columnPrefix="cr_"
+                 resultMap="cn.wolfcode.p2p.base.mapper.LoginInfoMapper.BaseResultMap"/>
+
+    <collection property="bids" column="id" select="cn.wolfcode.p2p.base.mapper.BidMapper.selectByBidRequestId"/>
+  </resultMap>
+  <insert id="insert" parameterType="cn.wolfcode.p2p.base.domain.BidRequest" useGeneratedKeys="true" keyProperty="id" >
+    insert into bidrequest (version, bidRequestType, bidRequestState, bidRequestAmount, currentRate, 
+      monthes2Return, bidCount, totalRewardAmount, currentSum, title, 
+      description, note, disableDate, createUserId, disableDays, minBidAmount,
+      applyTime, publishTime,returnType)
+    values (#{version}, #{bidRequestType}, #{bidRequestState}, #{bidRequestAmount}, #{currentRate}, 
+      #{monthes2Return}, #{bidCount}, #{totalRewardAmount}, #{currentSum}, #{title}, 
+      #{description}, #{note}, #{disableDate}, #{createUser.id}, #{disableDays}, #{minBidAmount},
+      #{applyTime}, #{publishTime},#{returnType})
+  </insert>
+  <update id="updateByPrimaryKey" parameterType="cn.wolfcode.p2p.base.domain.BidRequest" >
+    update bidrequest
+    set version = version + 1,
+      returnType = #{returnType},
+      bidRequestType = #{bidRequestType},
+      bidRequestState = #{bidRequestState},
+      bidRequestAmount = #{bidRequestAmount},
+      currentRate = #{currentRate},
+      monthes2Return = #{monthes2Return},
+      bidCount = #{bidCount},
+      totalRewardAmount = #{totalRewardAmount},
+      currentSum = #{currentSum},
+      title = #{title},
+      description = #{description},
+      note = #{note},
+      disableDate = #{disableDate},
+      createUserId = #{createUser.id},
+      disableDays = #{disableDays},
+      minBidAmount = #{minBidAmount},
+      applyTime = #{applyTime},
+      publishTime = #{publishTime}
+    where id = #{id} and version = #{version}
+  </update>
+  <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Long" >
+    select br.id, version, bidRequestType, bidRequestState, bidRequestAmount, currentRate,
+    monthes2Return, bidCount, totalRewardAmount, currentSum, title, description, note, 
+    disableDate, createUserId, disableDays, minBidAmount, applyTime, publishTime,returnType,
+    cr.id cr_id,
+    cr.username cr_username
+    from bidrequest br join logininfo cr on cr.id = br.createUserId
+    where br.id = #{id}
+  </select>
+
+  <sql id="base_sql">
+    <where>
+      <if test="bidRequestState != -1">
+        AND br.bidRequestState = #{bidRequestState}
+      </if>
+      <if test="bidRequestStates != null">
+        AND br.bidRequestState in
+        <foreach collection="bidRequestStates" open="(" close=")" separator="," item="state">
+          #{state}
+        </foreach>
+      </if>
+    </where>
+  </sql>
+
+  <select id="selectForCount" resultType="java.lang.Integer">
+    select count(0) from bidrequest br
+    <include refid="base_sql"/>
+  </select>
+  <select id="selectForList" resultMap="BaseResultMap">
+    select br.id, version, bidRequestType, bidRequestState, bidRequestAmount, currentRate,
+      monthes2Return, bidCount, totalRewardAmount, currentSum, title, description, note,
+      disableDate, createUserId, disableDays, minBidAmount, applyTime, publishTime,returnType,
+      cr.id cr_id,
+      cr.username cr_username
+    from bidrequest br join logininfo cr on cr.id = br.createUserId
+    <include refid="base_sql"/>
+    <if test="orderBy != null">
+      order by ${orderBy} <if test="orderType != null">${orderType}</if>
+    </if>
+    <if test="pageSize > 0">
+      limit #{start},#{pageSize}
+    </if>
+  </select>
+    <select id="selectPublish" resultMap="BaseResultMap">
+      select br.id, version, bidRequestType, bidRequestState, bidRequestAmount, currentRate,
+        monthes2Return, bidCount, totalRewardAmount, currentSum, title, description, note,
+        disableDate, createUserId, disableDays, minBidAmount, applyTime, publishTime,returnType,
+        cr.id cr_id,
+        cr.username cr_username
+      from bidrequest br join logininfo cr on cr.id = br.createUserId
+      where br.bidRequestState = #{state} and br.publishTime &lt;= #{date}
+    </select>
+</mapper>
